@@ -1,16 +1,21 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.protelis</groupId>
-  <artifactId>protelis-demo</artifactId>
+  <artifactId>protelis-demo-visualized</artifactId>
   <version>4.0.1</version>
-  <name>Protelis Demo</name>
-  <description>Example of a minimal project based on Protelis</description>
+  <name>Protelis Demo Visualized</name>
+  <description>Example of a minimal project based on Protelis with a visualization of the simulation</description>
   <dependencies>
   	<dependency>
   		<groupId>org.protelis</groupId>
   		<artifactId>protelis</artifactId>
   		<version>4.0.1</version>
   	</dependency>
+	<dependency>
+    	<groupId>gov.nasa</groupId>
+    	<artifactId>worldwind</artifactId>
+    	<version>2.0.0-986</version>
+	</dependency>
 	<dependency>
 		<groupId>junit</groupId>
 		<artifactId>junit</artifactId>

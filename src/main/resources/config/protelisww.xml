@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Application World Wind configuration values-->
+<WorldWindConfiguration version="1">
+    <!--The initial layer list can be embedded here or linked as below. To change the set of initial layers,-->
+    <!--modify the file identified by the href or replace the link with your own-->
+    <LayerList href="config/protelislayers.xml"/>
+    <!--Most configuration information is defined in attribute-value pairs-->
+    <Property name="gov.nasa.worldwind.avkey.InitialLatitude" value="65.82"/>
+    <Property name="gov.nasa.worldwind.avkey.InitialLongitude" value="-169"/>
+    <Property name="gov.nasa.worldwind.avkey.InitialAltitude" value="2.0e6"/>
+</WorldWindConfiguration>
