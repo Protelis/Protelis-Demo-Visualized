@@ -13,6 +13,7 @@ import gov.nasa.worldwind.exception.WWAbsentRequirementException;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.layers.*;
 import gov.nasa.worldwind.layers.placename.PlaceNameLayer;
+import gov.nasa.worldwind.render.Renderable;
 import gov.nasa.worldwind.symbology.BasicTacticalSymbolAttributes;
 import gov.nasa.worldwind.symbology.SymbologyConstants;
 import gov.nasa.worldwind.symbology.TacticalSymbol;
@@ -314,7 +315,6 @@ public class WorldWindVisualization
         try
         {
             final AppFrame frame = appFrameClass.newInstance();
-            tacSymbolTest(frame);
             frame.setTitle(windowName);
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             java.awt.EventQueue.invokeLater(new Runnable()
@@ -339,33 +339,38 @@ public class WorldWindVisualization
     
     public WorldWindVisualization(String windowName) {
     	frame = start(windowName,AppFrame.class);
-    }
-
-    public static void main(String[] args)
-    {
-        // Call the static start method like this from the main method of your derived class.
-        // Substitute your application's name for the first argument.
-        WorldWindVisualization.start("World Wind Application", AppFrame.class);
+    	insertBeforeCompass(frame.getWwd(), symbolLayer);
     }
     
-    static void tacSymbolTest(AppFrame frame) {
-    	// Create a renderable layer to display the tactical symbol. This example adds
-    	// only a single symbol, but many symbols can be added to a single layer. Note
-    	// that Tactical symbols and tactical graphics can be combined in a single layer.
-    	RenderableLayer symbolLayer = new RenderableLayer();
-    	 
-    	// Create a tactical symbol for the MIL-STD-2525 symbology set. The symbol
-    	// identifier specifies a MIL-STD-2525 friendly Special Operations Forces Drone
-    	// Aircraft. The position places the tactical symbol at 1km above mean sea level.
+    /* Accessors for adding / removing pieces of the visualization */
+    public void addVisualization(Renderable element) {
+    	symbolLayer.addRenderable(element);
+    }
+    public void removeVisualization(Renderable element) {
+    	symbolLayer.removeRenderable(element);
+    }
+    public void clearVisualization() {
+    	symbolLayer.removeAllRenderables();
+    }
+    
+
+    /**
+     * Scratch test of flying 100 random UAVs over BBN
+     */
+    public static void main(String[] args) {
+    	WorldWindVisualization vis = new WorldWindVisualization("World Wind Application");
+    	
+    	// Create a symbol for a civilian UAV
     	SymbolCode code = new SymbolCode();
     	code.setBattleDimension(SymbologyConstants.BATTLE_DIMENSION_AIR);
-    	code.setOrderOfBattle(SymbologyConstants.ORDER_OF_BATTLE_AIR);
+    	code.setOrderOfBattle(SymbologyConstants.ORDER_OF_BATTLE_CIVILIAN);
     	code.setStandardIdentity(SymbologyConstants.STANDARD_IDENTITY_FRIEND);
     	code.setStatus(SymbologyConstants.STATUS_PRESENT);
     	code.setScheme(SymbologyConstants.SCHEME_WARFIGHTING);
     	code.setCategory(SymbologyConstants.CATEGORY_TASKS);
     	code.setFunctionId("MFQ"); // Drone
-    	//TacticalSymbol symbol = new MilStd2525TacticalSymbol("SFAPMFQM------A", Position.fromDegrees(34.7327, -117.8347, 1000));
+    	
+    	// Put 100 into the map
     	for(int i=1;i<100;i++) {
     		double range = 0.03;
     		double offsetx = (Math.random()-0.5) * range, offsety = (Math.random()-0.5) * range;
@@ -374,17 +379,7 @@ public class WorldWindVisualization
     		attrs.setScale(0.2); // Make the symbol 75% its normal size.
     		symbol.setAttributes(attrs);
     		symbol.setShowTextModifiers(false);
-        	symbolLayer.addRenderable(symbol);
+        	vis.addVisualization(symbol);
     	}
-    	
-    	// Add the layer to the world window's model and request that the layer redraw
-    	// itself. The world window draws the symbol on the globe at the specified
-    	// position. Interactions between the symbol and the cursor are returned in the
-    	// world window's picked object list, and reported to the world window's select
-    	// listeners.
-    	WorldWindow wwd = frame.getWwd();
-    	insertBeforeCompass(wwd, symbolLayer);
-    	//wwd.getModel().getLayers().add(symbolLayer);
-    	wwd.redraw();    	
     }
 }
