@@ -20,10 +20,10 @@ public class ClickAndGoSelectListener  implements SelectListener
 {
 
     private final WorldWindow wwd;
-    private final Class pickedObjClass;    // Which picked object class do we handle
+    private final Class<?> pickedObjClass;    // Which picked object class do we handle
     private final double elevationOffset;  // Meters above the target position
 
-    public ClickAndGoSelectListener(WorldWindow wwd, Class pickedObjClass)
+    public ClickAndGoSelectListener(WorldWindow wwd, Class<?> pickedObjClass)
     {
         if (wwd == null)
         {
@@ -37,7 +37,7 @@ public class ClickAndGoSelectListener  implements SelectListener
         this.elevationOffset = 0d;
     }
 
-    public ClickAndGoSelectListener(WorldWindow wwd, Class pickedObjClass, double elevationOffset)
+    public ClickAndGoSelectListener(WorldWindow wwd, Class<?> pickedObjClass, double elevationOffset)
     {
         if (wwd == null)
         {

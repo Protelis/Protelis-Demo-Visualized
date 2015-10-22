@@ -36,7 +36,7 @@ import java.awt.*;
  *
  * @version $Id: ApplicationTemplate.java 1171 2013-02-11 21:45:02Z dcollins $
  */
-public class ApplicationTemplate
+public class WorldWindVisualization
 {
 	// Set location of config document
 	static {       
@@ -45,7 +45,8 @@ public class ApplicationTemplate
 	
     public static class AppPanel extends JPanel
     {
-        protected WorldWindow wwd;
+		private static final long serialVersionUID = 8394322655971367590L;
+		protected WorldWindow wwd;
         protected StatusBar statusBar;
         protected ToolTipController toolTipController;
         protected HighlightController highlightController;
@@ -95,7 +96,9 @@ public class ApplicationTemplate
 
     protected static class AppFrame extends JFrame
     {
-        private Dimension canvasSize = new Dimension(800, 600);
+		private static final long serialVersionUID = 1902870695296019698L;
+
+		private Dimension canvasSize = new Dimension(800, 600);
 
         protected AppPanel wwjPanel;
         protected LayerPanel layerPanel;
@@ -301,18 +304,18 @@ public class ApplicationTemplate
         }
     }
 
-    public static AppFrame start(String appName, Class appFrameClass)
+    public static AppFrame start(String windowName, Class<AppFrame> appFrameClass)
     {
-        if (Configuration.isMacOS() && appName != null)
+        if (Configuration.isMacOS() && windowName != null)
         {
-            System.setProperty("com.apple.mrj.application.apple.menu.about.name", appName);
+            System.setProperty("com.apple.mrj.application.apple.menu.about.name", windowName);
         }
 
         try
         {
-            final AppFrame frame = (AppFrame) appFrameClass.newInstance();
+            final AppFrame frame = appFrameClass.newInstance();
             tacSymbolTest(frame);
-            frame.setTitle(appName);
+            frame.setTitle(windowName);
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             java.awt.EventQueue.invokeLater(new Runnable()
             {
@@ -331,14 +334,26 @@ public class ApplicationTemplate
         }
     }
 
+    private final AppFrame frame;
+	RenderableLayer symbolLayer = new RenderableLayer();
+    
+    public WorldWindVisualization(String windowName) {
+    	frame = start(windowName,AppFrame.class);
+    }
+
     public static void main(String[] args)
     {
         // Call the static start method like this from the main method of your derived class.
         // Substitute your application's name for the first argument.
-        ApplicationTemplate.start("World Wind Application", AppFrame.class);
+        WorldWindVisualization.start("World Wind Application", AppFrame.class);
     }
     
     static void tacSymbolTest(AppFrame frame) {
+    	// Create a renderable layer to display the tactical symbol. This example adds
+    	// only a single symbol, but many symbols can be added to a single layer. Note
+    	// that Tactical symbols and tactical graphics can be combined in a single layer.
+    	RenderableLayer symbolLayer = new RenderableLayer();
+    	 
     	// Create a tactical symbol for the MIL-STD-2525 symbology set. The symbol
     	// identifier specifies a MIL-STD-2525 friendly Special Operations Forces Drone
     	// Aircraft. The position places the tactical symbol at 1km above mean sea level.
@@ -350,20 +365,18 @@ public class ApplicationTemplate
     	code.setScheme(SymbologyConstants.SCHEME_WARFIGHTING);
     	code.setCategory(SymbologyConstants.CATEGORY_TASKS);
     	code.setFunctionId("MFQ"); // Drone
-    	System.out.println(code.toString());
     	//TacticalSymbol symbol = new MilStd2525TacticalSymbol("SFAPMFQM------A", Position.fromDegrees(34.7327, -117.8347, 1000));
-    	TacticalSymbol symbol = new MilStd2525TacticalSymbol(code.toString(), Position.fromDegrees(34.7327, -117.8347, 1000));
-    	TacticalSymbolAttributes attrs = new BasicTacticalSymbolAttributes();
-    	attrs.setScale(0.2); // Make the symbol 75% its normal size.
-    	symbol.setAttributes(attrs);
-    	symbol.setShowTextModifiers(false);
+    	for(int i=1;i<100;i++) {
+    		double range = 0.03;
+    		double offsetx = (Math.random()-0.5) * range, offsety = (Math.random()-0.5) * range;
+    		TacticalSymbol symbol = new MilStd2525TacticalSymbol(code.toString(), Position.fromDegrees(42.3898+offsetx, -71.1475+offsety, 100));
+    		TacticalSymbolAttributes attrs = new BasicTacticalSymbolAttributes();
+    		attrs.setScale(0.2); // Make the symbol 75% its normal size.
+    		symbol.setAttributes(attrs);
+    		symbol.setShowTextModifiers(false);
+        	symbolLayer.addRenderable(symbol);
+    	}
     	
-    	// Create a renderable layer to display the tactical symbol. This example adds
-    	// only a single symbol, but many symbols can be added to a single layer. Note
-    	// that Tactical symbols and tactical graphics can be combined in a single layer.
-    	RenderableLayer symbolLayer = new RenderableLayer();
-    	symbolLayer.addRenderable(symbol);
-    	 
     	// Add the layer to the world window's model and request that the layer redraw
     	// itself. The world window draws the symbol on the globe at the specified
     	// position. Interactions between the symbol and the cursor are returned in the

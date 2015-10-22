@@ -9,7 +9,7 @@ package visualizer.util;
 import gov.nasa.worldwind.*;
 import gov.nasa.worldwind.avlist.*;
 import gov.nasa.worldwind.event.*;
-import visualizer.ApplicationTemplate;
+import visualizer.WorldWindVisualization;
 import gov.nasa.worldwind.layers.*;
 import gov.nasa.worldwind.util.*;
 
@@ -178,7 +178,7 @@ public class ToolTipController implements SelectListener, Disposable
     protected void addLayer(Layer layer)
     {
         if (!this.wwd.getModel().getLayers().contains(layer))
-            ApplicationTemplate.insertBeforeCompass(this.wwd, layer);
+            WorldWindVisualization.insertBeforeCompass(this.wwd, layer);
     }
 
     protected void removeLayer(Layer layer)

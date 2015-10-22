@@ -23,7 +23,8 @@ import java.awt.event.*;
  */
 public class LayerPanel extends JPanel
 {
-    protected JPanel layersPanel;
+	private static final long serialVersionUID = 6057306772976986800L;
+	protected JPanel layersPanel;
     protected JPanel westPanel;
     protected JScrollPane scrollPane;
     protected Font defaultFont;
@@ -118,7 +119,8 @@ public class LayerPanel extends JPanel
 
     protected static class LayerAction extends AbstractAction
     {
-        protected WorldWindow wwd;
+		private static final long serialVersionUID = -2942668441248848231L;
+		protected WorldWindow wwd;
         protected Layer layer;
         protected boolean selected;
 

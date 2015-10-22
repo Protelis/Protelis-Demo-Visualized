@@ -5,7 +5,7 @@
     <!--modify the file identified by the href or replace the link with your own-->
     <LayerList href="config/protelislayers.xml"/>
     <!--Most configuration information is defined in attribute-value pairs-->
-    <Property name="gov.nasa.worldwind.avkey.InitialLatitude" value="65.82"/>
-    <Property name="gov.nasa.worldwind.avkey.InitialLongitude" value="-169"/>
-    <Property name="gov.nasa.worldwind.avkey.InitialAltitude" value="2.0e6"/>
+    <Property name="gov.nasa.worldwind.avkey.InitialLatitude" value="42.3898"/>
+    <Property name="gov.nasa.worldwind.avkey.InitialLongitude" value="-71.1475"/>
+    <Property name="gov.nasa.worldwind.avkey.InitialAltitude" value="4.0e3"/>
 </WorldWindConfiguration>

@@ -20,8 +20,10 @@
         <Property name="MinActiveAltitude" value="3e6"/>
     </Layer>
     <Layer href="config/Earth/BMNGWMSLayer2.xml" actuate="onLoad"/>
-    <Layer href="config/Earth/LandsatI3WMSLayer2.xml" actuate="onLoad"/>
+    <!-- <Layer href="config/Earth/LandsatI3WMSLayer2.xml" actuate="onLoad"/> -->
     <Layer href="config/Earth/MSVirtualEarthAerialLayer.xml" actuate="onLoad"/>
+    <!-- <Layer href="config/Earth/MSVirtualEarthHybridLayer.xml" actuate="onLoad"/> -->
+    <Layer href="config/Earth/BingImagery.xml" actuate="onLoad"/>
     <Layer href="config/Earth/OpenStreetMap.xml" actuate="onRequest"/>
     <Layer className="gov.nasa.worldwind.layers.Earth.NASAWFSPlaceNameLayer"/>
     <Layer className="gov.nasa.worldwind.layers.WorldMapLayer"/>
