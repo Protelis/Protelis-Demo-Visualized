@@ -352,6 +352,9 @@ public class WorldWindVisualization
     public void clearVisualization() {
     	symbolLayer.removeAllRenderables();
     }
+    public void triggerRedraw() {
+    	frame.getWwd().redraw();
+    }
     
 
     /**

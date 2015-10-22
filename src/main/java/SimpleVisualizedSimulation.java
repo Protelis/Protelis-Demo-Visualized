@@ -1,3 +1,12 @@
+import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.render.Renderable;
+import gov.nasa.worldwind.symbology.BasicTacticalSymbolAttributes;
+import gov.nasa.worldwind.symbology.SymbologyConstants;
+import gov.nasa.worldwind.symbology.TacticalSymbol;
+import gov.nasa.worldwind.symbology.TacticalSymbolAttributes;
+import gov.nasa.worldwind.symbology.milstd2525.MilStd2525TacticalSymbol;
+import gov.nasa.worldwind.symbology.milstd2525.SymbolCode;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -12,6 +21,8 @@ import org.protelis.lang.ProtelisLoader;
 import org.protelis.vm.IProgram;
 import org.protelis.vm.util.CodePath;
 
+import visualizer.WorldWindVisualization;
+
 /**
  * Minimal demonstration of an application using Protelis.
  * This demonstration does the following:
@@ -20,11 +31,15 @@ import org.protelis.vm.util.CodePath;
  *   ProtelisVM, execution environment, and network interface
  * - Run several rounds of synchronous execution
  */
-public class HelloMain {
+public class SimpleVisualizedSimulation {
 	/** Collection of devices */
 	private static List<SimpleDevice> devices = new ArrayList<>();
 	/** Network for moving messages between devices */
 	private static Map<SimpleDevice,Set<SimpleDevice>> network = new HashMap<>();
+	
+	/** WorldWind visualization */
+	private static WorldWindVisualization vis = new WorldWindVisualization("Visualized Protelis");
+	private static Map<SimpleDevice,TacticalSymbol> visualizations = new HashMap<>();
 	
 	/** Kludged output to either standard out or a string */
 	public static PrintStream out = System.out;
@@ -44,14 +59,10 @@ public class HelloMain {
 		out.println("Creating grid network");
 		createNetwork("hello");
 		
-		// Run several synchronous rounds of execution
-		for(int i=0;i<3;i++) {
-			out.println("Executing round "+i);
+		// Run until window signals to exit
+		while(true) {
 			synchronousUpdate();
 		}
-		
-		// All done!
-		out.println("Finished executing");
 	}
 	
 	/**
@@ -69,12 +80,16 @@ public class HelloMain {
 		for(int i=0;i<EDGE_LENGTH;i++) {
 			for(int j=0;j<EDGE_LENGTH;j++) {
 				int id = i*4+j;
+	    		Position pos = Position.fromDegrees(42.3898+(i*0.002), -71.1475+(j*0.002), 300);
+	    		
 				// Parse a new copy of the program for each device:
 				// it will be marked up with values as the interpreter runs
 				IProgram program = ProtelisLoader.parse(protelisModuleName);
+
 				// Create the device
-				SimpleDevice executionContext = new SimpleDevice(program,id);
+				SimpleDevice executionContext = new SimpleDevice(program,id,pos);
 				devices.add(executionContext);
+				visualizations.put(executionContext,makeUAVSymbol(executionContext));
 				// Mark the leader
 				if(id==LEADER_ID) { 
 					executionContext.currentEnvironment().put(new FasterString("leader"), true); 
@@ -98,6 +113,28 @@ public class HelloMain {
 		}
 	}
 
+	private static TacticalSymbol makeUAVSymbol(SimpleDevice device) {
+		// Get symbol code for UAV
+    	SymbolCode code = new SymbolCode();
+    	code.setBattleDimension(SymbologyConstants.BATTLE_DIMENSION_AIR);
+    	code.setOrderOfBattle(SymbologyConstants.ORDER_OF_BATTLE_CIVILIAN);
+    	code.setStandardIdentity(SymbologyConstants.STANDARD_IDENTITY_FRIEND);
+    	code.setStatus(SymbologyConstants.STATUS_PRESENT);
+    	code.setScheme(SymbologyConstants.SCHEME_WARFIGHTING);
+    	code.setCategory(SymbologyConstants.CATEGORY_TASKS);
+    	code.setFunctionId("MFQ"); // Drone
+    	
+    	
+		TacticalSymbol symbol = new MilStd2525TacticalSymbol(code.toString(), device.getPosition());
+		TacticalSymbolAttributes attrs = new BasicTacticalSymbolAttributes();
+		attrs.setScale(0.2); // Make the symbol 75% its normal size.
+		symbol.setAttributes(attrs);
+		symbol.setShowTextModifiers(false);
+    	vis.addVisualization(symbol);
+    	
+		return symbol;
+	}
+
 	/**
 	 * Execute every device once, then deliver updates to all neighbors.
 	 */
@@ -114,5 +151,12 @@ public class HelloMain {
 				dst.accessNetworkManager().receiveFromNeighbor(src.getDeviceUID(),message);
 			}
 		}
+		
+		// update positions of visualization
+		for(SimpleDevice src : network.keySet()) {
+			TacticalSymbol symbol = visualizations.get(src);
+			symbol.setPosition(src.getPosition());
+		}
+		vis.triggerRedraw();
 	}
 }

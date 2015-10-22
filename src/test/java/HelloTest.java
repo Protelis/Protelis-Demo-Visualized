@@ -15,9 +15,9 @@ public class HelloTest {
 	public void test() {
 		// Run our "hello world" with output to string rather than standard out
 		String[] args = new String[]{"string"};
-		HelloMain.main(args);
+		SimpleVisualizedSimulation.main(args);
 		// Compare against a file containing the expected results
-		checkResults("HelloTest.txt",HelloMain.outBuffer.toString());
+		checkResults("HelloTest.txt",SimpleVisualizedSimulation.outBuffer.toString());
 	}
 	
 	private static void checkResults(final String file, String result) {

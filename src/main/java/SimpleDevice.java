@@ -1,3 +1,5 @@
+import gov.nasa.worldwind.geom.Angle;
+import gov.nasa.worldwind.geom.Position;
 import it.unibo.alchemist.model.interfaces.IPosition;
 
 import java.util.HashMap;
@@ -5,6 +7,7 @@ import java.util.Map;
 
 import org.danilopianini.lang.util.FasterString;
 import org.protelis.lang.datatype.DeviceUID;
+import org.protelis.lang.datatype.Tuple;
 import org.protelis.vm.IProgram;
 import org.protelis.vm.ProtelisVM;
 import org.protelis.vm.impl.AbstractExecutionContext;
@@ -18,13 +21,15 @@ public class SimpleDevice extends AbstractExecutionContext {
 	private final IntegerUID uid;
 	/** The Protelis VM to be executed by the device */
 	private final ProtelisVM vm;
+	private Position position;
 	
 	/**
 	 * Standard constructor
 	 */
-	public SimpleDevice(IProgram program, int uid) {
+	public SimpleDevice(IProgram program, int uid, Position position) {
 		super(new CachingNetworkManager());
 		this.uid = new IntegerUID(uid);
+		this.position = position;
 		
 		// Finish making the new device and add it to our collection
 		vm = new ProtelisVM(program, this);
@@ -49,7 +54,26 @@ public class SimpleDevice extends AbstractExecutionContext {
 	 * Test actuator that dumps a string message to the output
 	 */
 	public void announce(String message) {
-		HelloMain.out.println(message);
+		SimpleVisualizedSimulation.out.println(message);
+	}
+	
+	private static final double EARTH_RADIUS = 6.371e6;
+	/**
+	 * Move in a direction specified by the 3-tuple vector in meters
+	 * Uses a kludge vector in which +X = East, +Y = North
+	 * @param vector
+	 */
+	public void move(Tuple vector) {
+		double radius = EARTH_RADIUS + position.elevation;
+		double degreesPerMeter = 360 / (2 * Math.PI * radius);
+		double newLon = position.longitude.degrees + degreesPerMeter * (Double)vector.get(0);
+		double newLat = position.latitude.degrees + degreesPerMeter * (Double)vector.get(1);
+		double newElevation = position.elevation + (Double)vector.get(2);
+		position = Position.fromDegrees(newLat, newLon, newElevation);
+	}
+
+	public Position getPosition() {
+		return position;
 	}
 
 	/** 
