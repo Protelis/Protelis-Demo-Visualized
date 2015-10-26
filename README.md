@@ -1,7 +1,7 @@
 # Protelis demo application
 
 This project demonstrates a minimal application visualizing the use of 
-Protelis in a simulator (in particular, using NASA's WorldWind GIS/visualization framework).
+Protelis in a simulator (in particular, using [NASA's WorldWind GIS/visualization framework](http://worldwind.arc.nasa.gov/java/)).
 
 Protelis requires Java 8+.  This project has been set up to run in Eclipse with Maven, and should be able to be 
 directly imported and executed if you have these set up.
