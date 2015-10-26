@@ -130,7 +130,7 @@ public class SimpleVisualizedSimulation {
     	
 		TacticalSymbol symbol = new MilStd2525TacticalSymbol(code.toString(), device.getPosition());
 		TacticalSymbolAttributes attrs = new BasicTacticalSymbolAttributes();
-		attrs.setScale(0.2); // Make the symbol 75% its normal size.
+		attrs.setScale(0.2); // Make the symbol 20% its normal size.
 		symbol.setAttributes(attrs);
 		symbol.setShowTextModifiers(false);
     	vis.addVisualization(symbol,"Symbols");
