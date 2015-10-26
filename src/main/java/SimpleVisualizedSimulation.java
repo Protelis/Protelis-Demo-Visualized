@@ -1,5 +1,7 @@
 import gov.nasa.worldwind.geom.Position;
-import gov.nasa.worldwind.render.Renderable;
+import gov.nasa.worldwind.geom.Vec4;
+import gov.nasa.worldwind.globes.Earth;
+import gov.nasa.worldwind.globes.Globe;
 import gov.nasa.worldwind.symbology.BasicTacticalSymbolAttributes;
 import gov.nasa.worldwind.symbology.SymbologyConstants;
 import gov.nasa.worldwind.symbology.TacticalSymbol;
@@ -22,6 +24,7 @@ import org.protelis.vm.IProgram;
 import org.protelis.vm.util.CodePath;
 
 import visualizer.WorldWindVisualization;
+import visualizer.util.NetworkConnectionVisualization;
 
 /**
  * Minimal demonstration of an application using Protelis.
@@ -40,6 +43,7 @@ public class SimpleVisualizedSimulation {
 	/** WorldWind visualization */
 	private static WorldWindVisualization vis = new WorldWindVisualization("Visualized Protelis");
 	private static Map<SimpleDevice,TacticalSymbol> visualizations = new HashMap<>();
+	private static Map<SimpleDevice,NetworkConnectionVisualization> networkVis = new HashMap<>();
 	
 	/** Kludged output to either standard out or a string */
 	public static PrintStream out = System.out;
@@ -60,7 +64,9 @@ public class SimpleVisualizedSimulation {
 		createNetwork("hello");
 		
 		// Run until window signals to exit
+		int round = 0;
 		while(true) {
+			out.println("Executing round "+round++);
 			synchronousUpdate();
 		}
 	}
@@ -71,7 +77,7 @@ public class SimpleVisualizedSimulation {
 	 */
 	private static void createNetwork(String protelisModuleName) {
 		// Make a square grid of EDGE_LENGTH x EDGE_LENGTH devices
-		final int EDGE_LENGTH = 4;
+		final int EDGE_LENGTH = 5;
 		// One of these devices will be marked in its environment as a leader
 		final int LEADER_ID = 5; // should have neighbors 1, 4, 6, 9
 
@@ -80,7 +86,7 @@ public class SimpleVisualizedSimulation {
 		for(int i=0;i<EDGE_LENGTH;i++) {
 			for(int j=0;j<EDGE_LENGTH;j++) {
 				int id = i*4+j;
-	    		Position pos = Position.fromDegrees(42.3898+(i*0.002), -71.1475+(j*0.002), 300);
+	    		Position pos = Position.fromDegrees(42.3858+(i*0.002), -71.1515+(j*0.002), 300);
 	    		
 				// Parse a new copy of the program for each device:
 				// it will be marked up with values as the interpreter runs
@@ -96,21 +102,17 @@ public class SimpleVisualizedSimulation {
 				}
 				// Remember the devices in a grid, for later setting up the network
 				cache[i][j] = executionContext;
+				
+				// Create holders for network information
+		    	network.put(executionContext,new HashSet<>());
+		    	NetworkConnectionVisualization path = new NetworkConnectionVisualization(pos,new HashSet<>());
+		    	vis.addVisualization(path);
+		    	networkVis.put(executionContext,path);
 			}
 		}
 		
-		// Link them together to form a Manhattan grid network
-		for(int i=0;i<EDGE_LENGTH;i++) {
-			for(int j=0;j<EDGE_LENGTH;j++) {
-				SimpleDevice dev = cache[i][j];
-				Set<SimpleDevice> neighbors = new HashSet<>();
-				if(i>0) { neighbors.add(cache[i-1][j]); }
-				if(i<(EDGE_LENGTH-1)) { neighbors.add(cache[i+1][j]); }
-				if(j>0) { neighbors.add(cache[i][j-1]); }
-				if(j<(EDGE_LENGTH-1)) { neighbors.add(cache[i][j+1]); }
-				network.put(dev, neighbors);
-			}
-		}
+		// Link up the network
+		updateNetwork();
 	}
 
 	private static TacticalSymbol makeUAVSymbol(SimpleDevice device) {
@@ -143,6 +145,8 @@ public class SimpleVisualizedSimulation {
 		for(SimpleDevice d : devices) {
 			d.getVM().runCycle();
 		}
+		// Update network connectivity
+		updateNetwork();
 		
 		// Deliver shared-state updates over the network
 		for(SimpleDevice src : network.keySet()) {
@@ -158,5 +162,45 @@ public class SimpleVisualizedSimulation {
 			symbol.setPosition(src.getPosition());
 		}
 		vis.triggerRedraw();
+	}
+	
+	private static final Globe EARTH = new Earth();
+	private static final double COMMUNICATION_RANGE = 500; // meters
+	/**
+	 * Simple unit-disc network model
+	 */
+	private static void updateNetwork() {
+		for(SimpleDevice self : devices) {
+			Vec4 pSelf = EARTH.computePointFromPosition(self.getPosition());
+			Set<SimpleDevice> nbrs = network.get(self);
+			for(SimpleDevice other : devices) {
+				Vec4 pOther = EARTH.computePointFromPosition(other.getPosition());
+				double distance = pSelf.distanceTo3(pOther);
+				if(distance <= COMMUNICATION_RANGE) {
+					if(!nbrs.contains(other)) {
+						nbrs.add(other);
+					}
+				} else {
+					if(nbrs.contains(other)) {
+						nbrs.remove(other);
+					}
+				}
+			}
+		}
+		
+		for(SimpleDevice self : devices) {
+			NetworkConnectionVisualization netvis = networkVis.get(self);
+			netvis.setPosition(self.getPosition());
+			
+			Set<Position> i = new HashSet<>();
+			//Set<Position> i = (Set<Position>) netvis.getPositions();
+			//i.clear();
+			for(SimpleDevice nbr : network.get(self)) {
+				i.add(self.getPosition());
+				i.add(nbr.getPosition());
+			}
+			netvis.setNeighbors(i);
+		}
+		
 	}
 }

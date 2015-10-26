@@ -1,4 +1,3 @@
-import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.Position;
 import it.unibo.alchemist.model.interfaces.IPosition;
 
