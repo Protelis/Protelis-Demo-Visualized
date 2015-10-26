@@ -59,6 +59,7 @@ public class SimpleVisualizedSimulation {
 			out = new PrintStream(outBuffer);
 		}
 		
+		vis.orderLayers("Network","Symbols");
 		// Create the network of devices and connections
 		out.println("Creating grid network");
 		createNetwork("hello");
@@ -105,9 +106,9 @@ public class SimpleVisualizedSimulation {
 				
 				// Create holders for network information
 		    	network.put(executionContext,new HashSet<>());
-		    	NetworkConnectionVisualization path = new NetworkConnectionVisualization(pos,new HashSet<>());
-		    	vis.addVisualization(path);
-		    	networkVis.put(executionContext,path);
+		    	NetworkConnectionVisualization net = new NetworkConnectionVisualization(pos,new HashSet<>());
+		    	vis.addVisualization(net,"Network");
+		    	networkVis.put(executionContext,net);
 			}
 		}
 		
@@ -132,7 +133,7 @@ public class SimpleVisualizedSimulation {
 		attrs.setScale(0.2); // Make the symbol 75% its normal size.
 		symbol.setAttributes(attrs);
 		symbol.setShowTextModifiers(false);
-    	vis.addVisualization(symbol);
+    	vis.addVisualization(symbol,"Symbols");
     	
 		return symbol;
 	}
@@ -167,7 +168,9 @@ public class SimpleVisualizedSimulation {
 	private static final Globe EARTH = new Earth();
 	private static final double COMMUNICATION_RANGE = 500; // meters
 	/**
-	 * Simple unit-disc network model
+	 * Simple unit-disc network model, implemented naively.
+	 * A real application will want to run its updates using a more efficient data
+	 * structure like a quad tree
 	 */
 	private static void updateNetwork() {
 		for(SimpleDevice self : devices) {

@@ -161,7 +161,7 @@ public class NetworkConnectionVisualization implements OrderedRenderable
 
             // Compute a sphere that encloses the network. We'll use this sphere for intersection calculations to determine
             // if the network is actually visible.
-            double maxDist = 0;
+            double maxDist = 1; // minimum must be better than zero
             nbrPoints.clear();
             for(Position nbr : neighbors) {
             	Vec4 nbrPoint = dc.getGlobe().computePointFromPosition(nbr);

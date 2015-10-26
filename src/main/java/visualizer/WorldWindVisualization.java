@@ -12,7 +12,6 @@ import gov.nasa.worldwind.event.*;
 import gov.nasa.worldwind.exception.WWAbsentRequirementException;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.layers.*;
-import gov.nasa.worldwind.layers.placename.PlaceNameLayer;
 import gov.nasa.worldwind.render.Renderable;
 import gov.nasa.worldwind.symbology.BasicTacticalSymbolAttributes;
 import gov.nasa.worldwind.symbology.SymbologyConstants;
@@ -30,6 +29,8 @@ import visualizer.util.LayerPanel;
 import visualizer.util.ToolTipController;
 
 import java.awt.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Provides a base application framework for simple WorldWind examples. Examine other examples in this package to see
@@ -247,47 +248,47 @@ public class WorldWindVisualization
         layers.add(compassPosition, layer);
     }
 
-    public static void insertBeforePlacenames(WorldWindow wwd, Layer layer)
-    {
-        // Insert the layer into the layer list just before the placenames.
-        int compassPosition = 0;
-        LayerList layers = wwd.getModel().getLayers();
-        for (Layer l : layers)
-        {
-            if (l instanceof PlaceNameLayer)
-                compassPosition = layers.indexOf(l);
-        }
-        layers.add(compassPosition, layer);
-    }
+//    private static void insertBeforePlacenames(WorldWindow wwd, Layer layer)
+//    {
+//        // Insert the layer into the layer list just before the placenames.
+//        int compassPosition = 0;
+//        LayerList layers = wwd.getModel().getLayers();
+//        for (Layer l : layers)
+//        {
+//            if (l instanceof PlaceNameLayer)
+//                compassPosition = layers.indexOf(l);
+//        }
+//        layers.add(compassPosition, layer);
+//    }
 
-    public static void insertAfterPlacenames(WorldWindow wwd, Layer layer)
-    {
-        // Insert the layer into the layer list just after the placenames.
-        int compassPosition = 0;
-        LayerList layers = wwd.getModel().getLayers();
-        for (Layer l : layers)
-        {
-            if (l instanceof PlaceNameLayer)
-                compassPosition = layers.indexOf(l);
-        }
-        layers.add(compassPosition + 1, layer);
-    }
+//    private static void insertAfterPlacenames(WorldWindow wwd, Layer layer)
+//    {
+//        // Insert the layer into the layer list just after the placenames.
+//        int compassPosition = 0;
+//        LayerList layers = wwd.getModel().getLayers();
+//        for (Layer l : layers)
+//        {
+//            if (l instanceof PlaceNameLayer)
+//                compassPosition = layers.indexOf(l);
+//        }
+//        layers.add(compassPosition + 1, layer);
+//    }
 
-    public static void insertBeforeLayerName(WorldWindow wwd, Layer layer, String targetName)
-    {
-        // Insert the layer into the layer list just before the target layer.
-        int targetPosition = 0;
-        LayerList layers = wwd.getModel().getLayers();
-        for (Layer l : layers)
-        {
-            if (l.getName().indexOf(targetName) != -1)
-            {
-                targetPosition = layers.indexOf(l);
-                break;
-            }
-        }
-        layers.add(targetPosition, layer);
-    }
+//    private static void insertBeforeLayerName(WorldWindow wwd, Layer layer, String targetName)
+//    {
+//        // Insert the layer into the layer list just before the target layer.
+//        int targetPosition = 0;
+//        LayerList layers = wwd.getModel().getLayers();
+//        for (Layer l : layers)
+//        {
+//            if (l.getName().indexOf(targetName) != -1)
+//            {
+//                targetPosition = layers.indexOf(l);
+//                break;
+//            }
+//        }
+//        layers.add(targetPosition, layer);
+//    }
 
     static
     {
@@ -305,7 +306,7 @@ public class WorldWindVisualization
         }
     }
 
-    public static AppFrame start(String windowName, Class<AppFrame> appFrameClass)
+    private static AppFrame start(String windowName, Class<AppFrame> appFrameClass)
     {
         if (Configuration.isMacOS() && windowName != null)
         {
@@ -335,30 +336,58 @@ public class WorldWindVisualization
     }
 
     private final AppFrame frame;
-	RenderableLayer symbolLayer = new RenderableLayer();
+	private Map<String,RenderableLayer> extraLayers = new HashMap<>();
     
     public WorldWindVisualization(String windowName) {
     	frame = start(windowName,AppFrame.class);
-    	insertBeforeCompass(frame.getWwd(), symbolLayer);
     }
     
-    /* Accessors for adding / removing pieces of the visualization */
-    public void addVisualization(Renderable element) {
-    	symbolLayer.addRenderable(element);
+    public void orderLayers(String ... names) {
+    	for(String n : names) {
+    		ensureLayer(n);
+    	}
     }
-    public void removeVisualization(Renderable element) {
-    	symbolLayer.removeRenderable(element);
+    /** Add a visualization element
+     * @param element	Visualization object to be added
+     * @param layerName Layer to be midified; if the layer doesn't exist, it will be created
+     */
+    public void addVisualization(Renderable element, String layerName) {
+    	RenderableLayer layer = ensureLayer(layerName);
+    	layer.addRenderable(element);
     }
-    public void clearVisualization() {
-    	symbolLayer.removeAllRenderables();
+    /** Remove a visualization element
+     * @param element	Visualization object to be removed
+     * @param layerName Layer to be modified; if the layer doesn't exist, it will be created
+     */
+    public void removeVisualization(Renderable element, String layerName) {
+    	RenderableLayer layer = ensureLayer(layerName);
+    	layer.removeRenderable(element);
     }
+    /** Clear all visualizations from a layer
+     * @param layerName Layer to be midified; if the layer doesn't exist, it will be created
+     */
+    public void clearVisualization(String layerName) {
+    	RenderableLayer layer = ensureLayer(layerName);
+    	layer.removeAllRenderables();
+    }
+
+    /**
+     * Inform the visualizer that the simulation has updated, and needs to be re-drawn
+     */
     public void triggerRedraw() {
     	frame.getWwd().redraw();
     }
     
-
+    private RenderableLayer ensureLayer(String layerName) {
+    	if(!extraLayers.containsKey(layerName)) {
+    		RenderableLayer newLayer = new RenderableLayer();
+    		insertBeforeCompass(frame.getWwd(), newLayer);
+    		extraLayers.put(layerName, newLayer);
+    	}
+    	return extraLayers.get(layerName);
+    }
     /**
-     * Scratch test of flying 100 random UAVs over BBN
+     * Scratch test of flying 1000 random UAVs over Fresh pond in Cambridge, MA
      */
     public static void main(String[] args) {
     	WorldWindVisualization vis = new WorldWindVisualization("World Wind Application");
@@ -374,15 +403,15 @@ public class WorldWindVisualization
     	code.setFunctionId("MFQ"); // Drone
     	
     	// Put 100 into the map
-    	for(int i=1;i<100;i++) {
-    		double range = 0.03;
+    	for(int i=1;i<1000;i++) {
+    		double range = 0.1;
     		double offsetx = (Math.random()-0.5) * range, offsety = (Math.random()-0.5) * range;
     		TacticalSymbol symbol = new MilStd2525TacticalSymbol(code.toString(), Position.fromDegrees(42.3898+offsetx, -71.1475+offsety, 100));
     		TacticalSymbolAttributes attrs = new BasicTacticalSymbolAttributes();
-    		attrs.setScale(0.2); // Make the symbol 75% its normal size.
+    		attrs.setScale(0.2); // Make the symbol 20% its normal size.
     		symbol.setAttributes(attrs);
     		symbol.setShowTextModifiers(false);
-        	vis.addVisualization(symbol);
+        	vis.addVisualization(symbol,"Symbols");
     	}
     }
 }
