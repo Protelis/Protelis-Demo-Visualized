@@ -1,5 +1,6 @@
 package visualizer.util;
 
+import gov.nasa.worldwind.WorldWind;
 import gov.nasa.worldwind.geom.*;
 import gov.nasa.worldwind.pick.PickSupport;
 import gov.nasa.worldwind.render.*;
@@ -154,7 +155,7 @@ public class NetworkConnectionVisualization implements OrderedRenderable
         // new frame.
         if (dc.getFrameTimeStamp() != this.frameTimestamp) {
             // Convert the device's geographic position to a position in Cartesian coordinates.
-            this.placePoint = dc.getGlobe().computePointFromPosition(this.position);
+            this.placePoint = dc.computePointFromPosition(this.position,WorldWind.ABSOLUTE);
 
             // Compute the distance from the eye to the device's position.
             this.eyeDistance = dc.getView().getEyePoint().distanceTo3(this.placePoint);
@@ -164,7 +165,7 @@ public class NetworkConnectionVisualization implements OrderedRenderable
             double maxDist = 1; // minimum must be better than zero
             nbrPoints.clear();
             for(Position nbr : neighbors) {
-            	Vec4 nbrPoint = dc.getGlobe().computePointFromPosition(nbr);
+            	Vec4 nbrPoint = dc.computePointFromPosition(nbr,WorldWind.ABSOLUTE);
             	nbrPoints.add(nbrPoint);
             	double nbrDist = nbrPoint.distanceTo3(placePoint);
             	maxDist = Math.max(maxDist,nbrDist);
