@@ -1,15 +1,20 @@
 package visualizer.util;
 
 import gov.nasa.worldwind.WorldWind;
-import gov.nasa.worldwind.geom.*;
+import gov.nasa.worldwind.geom.Extent;
+import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.geom.Sphere;
+import gov.nasa.worldwind.geom.Vec4;
 import gov.nasa.worldwind.pick.PickSupport;
-import gov.nasa.worldwind.render.*;
+import gov.nasa.worldwind.render.DrawContext;
+import gov.nasa.worldwind.render.OrderedRenderable;
 
-import javax.media.opengl.*;
-
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Point;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.media.opengl.GL2;
 
 /**
  * Custom renderable for drawing a device's network links
@@ -17,56 +22,55 @@ import java.util.Set;
  * Derived on the cube example in the WorldWind examples package by pabercrombie.
  * The cube example is Copyright NASA, under the licensing of WorldWind
  */
-public class NetworkConnectionVisualization implements OrderedRenderable
-{
+public class NetworkConnectionVisualization implements OrderedRenderable {
     /** Geographic position of the device. */
-    protected Position position;
+    private Position position;
     /** Geographic positions of neighbors */
-    protected Iterable<Position> neighbors;
+    private Iterable<Position> neighbors;
     
     /** Support object to help with pick resolution. */
-    protected PickSupport pickSupport = new PickSupport();
+    private PickSupport pickSupport = new PickSupport();
 
     // Determined each frame
-    protected long frameTimestamp = -1L;
+    private long frameTimestamp = -1L;
     /** Cartesian position of the device, computed from {@link #position}. */
-    protected Vec4 placePoint;
+    private Vec4 placePoint;
     /** Cartesian positions of neighbors, computed from {@link #neighbors} */
-    protected Set<Vec4> nbrPoints = new HashSet<>();
+    private Set<Vec4> nbrPoints = new HashSet<>();
     /** Distance from the eye point to the device. */
-    protected double eyeDistance;
-    protected Extent extent;
+    private double eyeDistance;
+    private Extent extent;
 
     /**
      * Create a visualization of the network connections of one device.  
      * Note that when there are bidirectional connections, these can be doubly drawn
      * e.g., from A-->B and B-->A
-     * @param position	Position of the device whose connections are being visualized
-     * @param neighbors	Position of the devices it communicates with
+     * @param pos	Position of the device whose connections are being visualized
+     * @param nbrs	Position of the devices it communicates with
      */
-    public NetworkConnectionVisualization(Position position, Iterable<Position> neighbors) {
-        this.position = position;
-        this.neighbors = neighbors;
+    public NetworkConnectionVisualization(final Position pos, final Iterable<Position> nbrs) {
+        this.position = pos;
+        this.neighbors = nbrs;
     }
     
     /** 
-     * Update the position of a device
-     * @param position	new position
+     * Update the position of a device.
+     * @param pos	new position
      */
-    public void setPosition(Position position) {
-    	this.position = position;
+    public void setPosition(final Position pos) {
+    	this.position = pos;
     }
     
     /** 
-     * Update the position of a device's neighbors
-     * @param position	collection of new positions
+     * Update the position of a device's neighbors.
+     * @param nbrs	collection of new positions
      */
-    public void setNeighbors(Iterable<Position> neighbors) {
-    	this.neighbors = neighbors;
+    public void setNeighbors(final Iterable<Position> nbrs) {
+    	this.neighbors = nbrs;
     }
 
     @Override
-    public void render(DrawContext dc) {
+    public void render(final DrawContext dc) {
         // Render is called three times:
         // 1) During picking. The network is drawn in a single color.
         // 2) As a normal renderable. The network is added to the ordered renderable queue.
@@ -74,9 +78,13 @@ public class NetworkConnectionVisualization implements OrderedRenderable
 
         if (this.extent != null) {
         	// Ignore if not visible
-            if (!this.intersectsFrustum(dc)) return;
+            if (!this.intersectsFrustum(dc)) {
+            	return;
+            }
             // If the shape is less that a pixel in size, don't render it.
-            if (dc.isSmall(this.extent, 1)) return;
+            if (dc.isSmall(this.extent, 1)) {
+            	return;
+            }
         }
 
         if (dc.isOrderedRenderingMode()) {
@@ -91,12 +99,14 @@ public class NetworkConnectionVisualization implements OrderedRenderable
      * @param dc the current draw context.
      * @return true if this network intersects the frustum, otherwise false.
      */
-    protected boolean intersectsFrustum(DrawContext dc) {
-        if (this.extent == null)
+    protected boolean intersectsFrustum(final DrawContext dc) {
+        if (this.extent == null) {
             return true; // don't know the visibility, shape hasn't been computed yet
-
-        if (dc.isPickingMode())
+        }
+        
+        if (dc.isPickingMode()) {
             return dc.getPickFrustums().intersectsAny(this.extent);
+        }
 
         return dc.getView().getFrustumInModelCoordinates().intersects(this.extent);
     }
@@ -107,7 +117,7 @@ public class NetworkConnectionVisualization implements OrderedRenderable
     }
 
     @Override
-    public void pick(DrawContext dc, Point pickPoint) {
+    public void pick(final DrawContext dc, final Point pickPoint) {
         // Use same code for rendering and picking.
         this.render(dc);
     }
@@ -117,7 +127,7 @@ public class NetworkConnectionVisualization implements OrderedRenderable
      * endDrawing.
      * @param dc Active draw context.
      */
-    protected void beginDrawing(DrawContext dc) {
+    protected void beginDrawing(final DrawContext dc) {
         GL2 gl = dc.getGL().getGL2(); // GL initialization checks for GL2 compatibility.
 
         int attrMask = GL2.GL_CURRENT_BIT | GL2.GL_COLOR_BUFFER_BIT;
@@ -135,7 +145,7 @@ public class NetworkConnectionVisualization implements OrderedRenderable
      * Restore drawing state changed in beginDrawing to the default.
      * @param dc Active draw context.
      */
-    protected void endDrawing(DrawContext dc) {
+    protected void endDrawing(final DrawContext dc) {
         GL2 gl = dc.getGL().getGL2(); // GL initialization checks for GL2 compatibility.
 
 //        if (!dc.isPickingMode()) {
@@ -149,13 +159,14 @@ public class NetworkConnectionVisualization implements OrderedRenderable
      * Compute per-frame attributes, and add the ordered renderable to the ordered renderable list.
      * @param dc Current draw context.
      */
-    protected void makeOrderedRenderable(DrawContext dc) {
+    protected void makeOrderedRenderable(final DrawContext dc) {
         // This method is called twice each frame: once during picking and once during rendering. We only need to
         // compute the placePoint and eye distance once per frame, so check the frame timestamp to see if this is a
         // new frame.
         if (dc.getFrameTimeStamp() != this.frameTimestamp) {
             // Convert the device's geographic position to a position in Cartesian coordinates.
             this.placePoint = dc.computePointFromPosition(this.position,WorldWind.ABSOLUTE);
+            dc.getVerticalExaggeration();
 
             // Compute the distance from the eye to the device's position.
             this.eyeDistance = dc.getView().getEyePoint().distanceTo3(this.placePoint);
@@ -164,7 +175,7 @@ public class NetworkConnectionVisualization implements OrderedRenderable
             // if the network is actually visible.
             double maxDist = 1; // minimum must be better than zero
             nbrPoints.clear();
-            for(Position nbr : neighbors) {
+            for (Position nbr : neighbors) {
             	Vec4 nbrPoint = dc.computePointFromPosition(nbr,WorldWind.ABSOLUTE);
             	nbrPoints.add(nbrPoint);
             	double nbrDist = nbrPoint.distanceTo3(placePoint);
@@ -186,8 +197,9 @@ public class NetworkConnectionVisualization implements OrderedRenderable
      * network is rendered in ordered rendering mode.
      *
      * @param dc Current draw context.
+     * @param pickCandidates Record of which objects may be considered for individual selection
      */
-    protected void drawOrderedRenderable(DrawContext dc, PickSupport pickCandidates) {
+    protected void drawOrderedRenderable(final DrawContext dc, final PickSupport pickCandidates) {
         this.beginDrawing(dc);
         try {
             GL2 gl = dc.getGL().getGL2(); // GL initialization checks for GL2 compatibility.
@@ -207,16 +219,16 @@ public class NetworkConnectionVisualization implements OrderedRenderable
     }
 
     /**
-     * Actually draw the set of edges in the current (configured) drawing context
+     * Actually draw the set of edges in the current (configured) drawing context.
      * @param dc Current draw context.
      */
-    protected void drawEdges(DrawContext dc) {
+    protected void drawEdges(final DrawContext dc) {
         // Note: draw the network in OpenGL immediate mode for simplicity. Real applications may want
     	// to use vertex arrays or vertex buffer objects to achieve better performance.
         GL2 gl = dc.getGL().getGL2(); // GL initialization checks for GL2 compatibility.
         gl.glBegin(GL2.GL_LINES);
         try {
-        	for(Vec4 nbr : nbrPoints) {
+        	for (Vec4 nbr : nbrPoints) {
         		gl.glVertex3d(placePoint.x,placePoint.y,placePoint.z);
         		gl.glVertex3d(nbr.x,nbr.y,nbr.z);
         	}
