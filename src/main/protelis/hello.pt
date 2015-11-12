@@ -5,7 +5,7 @@ module hello
 import java.lang.Math.random
 
 // Get a variable from the environment
-let leader = self.hasEnvironmentVariable("leader");
+let leader = env.has("leader");
 
 let vector = [random()-0.5,random()-0.5,random()-0.5];
 
