@@ -3,10 +3,16 @@
 module hello
 
 import java.lang.Math.random
+import protelis:state:time
 
 // Get a variable from the environment
 let leader = env.has("leader");
 
-let vector = [random()-0.5,random()-0.5,random()-0.5];
+let vector = 
+if(cyclicTimerWithDecay(200,1)) {
+	[10,0,0] // Move sharply East once every 200 rounds
+} else {
+	[random()-0.5,random()-0.5,random()-0.5];
+};
 
 self.move(vector);
