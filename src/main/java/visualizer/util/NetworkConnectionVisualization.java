@@ -14,7 +14,7 @@ import java.awt.Point;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.media.opengl.GL2;
+import com.jogamp.opengl.GL2;
 
 /**
  * Custom renderable for drawing a device's network links
